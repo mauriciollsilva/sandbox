@@ -227,8 +227,12 @@ if [ "$APENAS_CALIBRAR" = false ]; then
     extrair_pacote "Vrui" "Vrui.tar.gz" "$VRUI_DIR"
     cd "$VRUI_DIR"
     info "Aplicando correcoes de compatibilidade com Ubuntu 24.04 / GCC 13..."
+    # Neutraliza PROCESS_DEPFILE e PROCESS_PICDEPFILE (regras de plugins .so).
+    # Este BasicMakefile e instalado em /usr/local/share/Vrui-4.6/make/ e
+    # reutilizado por Kinect e SARndbox — sem o PICDEPFILE eles falham com
+    # "*.d: No such file or directory".
     sed -i \
-        's/@\$(PROCESS_DEPFILE)/true/g; s/@rm -f \$(DEPFILETEMPLATE)/true/g; s/-MD //g' \
+        's/@\$(PROCESS_DEPFILE)/true/g; s/@\$(PROCESS_PICDEPFILE)/true/g; s/@rm -f \$(DEPFILETEMPLATE)/true/g; s/-MD //g' \
         BuildRoot/BasicMakefile
     grep -q "cstddef" Images/BaseImage.h \
         || sed -i '/#include <GL\/gl.h>/a #include <cstddef>' Images/BaseImage.h
@@ -247,7 +251,7 @@ if [ "$APENAS_CALIBRAR" = false ]; then
     cd "$KINECT_DIR"
     info "Aplicando correcoes de compatibilidade com Ubuntu 24.04 / GCC 13..."
     find . -name "BasicMakefile" | xargs -I{} sed -i \
-        's/@\$(PROCESS_DEPFILE)/true/g; s/@rm -f \$(DEPFILETEMPLATE)/true/g; s/-MD //g' {}
+        's/@\$(PROCESS_DEPFILE)/true/g; s/@\$(PROCESS_PICDEPFILE)/true/g; s/@rm -f \$(DEPFILETEMPLATE)/true/g; s/-MD //g' {}
     ok "Correcoes aplicadas!"
     info "Compilando com $(nproc) nucleos..."
     make -j"$(nproc)" SHELL=/bin/bash 2>&1 | tail -5
@@ -425,7 +429,7 @@ printf '#!/bin/bash\ncd %s\n./bin/SARndbox -uhm HeightColorMap.cpt -rer 20 60 -r
     "$SANDBOX_DIR" > "$ATALHO"
 chmod +x "$ATALHO"
 
-ok "Atalho criado: Iniciar-SandboxAR.R.sh"
+ok "Atalho criado: Iniciar-SandboxAR.sh"
 echo ""
 echo -e "${B}  ══════════════════════════════════════════════════════════${X}"
 echo -e "${N}               Boa diversao com a Sandbox AR!  ⛰  (^_~)${X}"

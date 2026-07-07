@@ -232,8 +232,12 @@ if [ "$APENAS_CALIBRAR" = false ]; then
     info "Aplicando correcoes de compatibilidade com Ubuntu 24.04 / GCC 13..."
 
     # Correcao 1: desativar sistema de dependencias incompativel
+    # Neutraliza PROCESS_DEPFILE e PROCESS_PICDEPFILE (regras de plugins .so).
+    # Este BasicMakefile e instalado em /usr/local/share/Vrui-4.6/make/ e
+    # reutilizado por Kinect e SARndbox — sem o PICDEPFILE eles falham com
+    # "*.d: No such file or directory".
     sed -i \
-        's/@\$(PROCESS_DEPFILE)/true/g; s/@rm -f \$(DEPFILETEMPLATE)/true/g; s/-MD //g' \
+        's/@\$(PROCESS_DEPFILE)/true/g; s/@\$(PROCESS_PICDEPFILE)/true/g; s/@rm -f \$(DEPFILETEMPLATE)/true/g; s/-MD //g' \
         BuildRoot/BasicMakefile
 
     # Correcao 2: adicionar include faltante no BaseImage.h
@@ -260,7 +264,7 @@ if [ "$APENAS_CALIBRAR" = false ]; then
     info "Aplicando correcoes de compatibilidade com Ubuntu 24.04 / GCC 13..."
     # Mesma correcao do Vrui: desativar sistema de dependencias incompativel
     find . -name "BasicMakefile" | xargs -I{} sed -i \
-        's/@\$(PROCESS_DEPFILE)/true/g; s/@rm -f \$(DEPFILETEMPLATE)/true/g; s/-MD //g' {}
+        's/@\$(PROCESS_DEPFILE)/true/g; s/@\$(PROCESS_PICDEPFILE)/true/g; s/@rm -f \$(DEPFILETEMPLATE)/true/g; s/-MD //g' {}
     ok "Correcoes aplicadas!"
     info "Compilando com $(nproc) nucleos..."
     make -j"$(nproc)" SHELL=/bin/bash 2>&1 | tail -5
