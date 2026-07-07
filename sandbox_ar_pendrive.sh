@@ -243,6 +243,27 @@ if [ "$APENAS_CALIBRAR" = false ]; then
     [ -f "/usr/local/share/Vrui-4.6/make/BasicMakefile" ] \
         && ok "Vrui instalado!" \
         || erro "Instalacao do Vrui falhou."
+
+    # Legibilidade dos menus: a config padrao usa TimesBoldUpright12, uma fonte
+    # bitmap de 12pt que fica borrada quando ampliada. Troca por
+    # CenturySchoolbookMediumUpright (alta resolucao) e aumenta o tamanho —
+    # apenas na secao Desktop, sem tocar nas secoes Vive/CAVE. Idempotente.
+    VRUI_CFG="/usr/local/etc/Vrui-4.6/Vrui.cfg"
+    if [ -f "$VRUI_CFG" ]; then
+        info "Melhorando legibilidade dos menus (fonte de alta resolucao)..."
+        awk '
+            /^\tsection Desktop[ \t]*$/ { indesktop=1 }
+            indesktop && /^\tsection / && $0 !~ /Desktop/ { indesktop=0 }
+            indesktop && /^[ \t]*uiFontName[ \t]/       { sub(/uiFontName[ \t].*/,       "uiFontName CenturySchoolbookMediumUpright") }
+            indesktop && /^[ \t]*uiFontTextHeight[ \t]/ { sub(/uiFontTextHeight[ \t].*/, "uiFontTextHeight 0.2") }
+            indesktop && /^[ \t]*uiSize[ \t]/           { sub(/uiSize[ \t].*/,           "uiSize 0.09") }
+            { print }
+        ' "$VRUI_CFG" > /tmp/Vrui.cfg.new \
+            && sudo cp /tmp/Vrui.cfg.new "$VRUI_CFG" \
+            && rm -f /tmp/Vrui.cfg.new \
+            && ok "Fonte da interface ajustada!" \
+            || aviso "Nao foi possivel ajustar a fonte (segue normalmente)."
+    fi
     pausar
 
     cabecalho
